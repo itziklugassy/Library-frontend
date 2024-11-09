@@ -680,49 +680,55 @@
 
         // Auth functions
        // Auth functions
-async function handleLogin(event) {
+       async function handleLogin(event) {
     event.preventDefault();
     const username = document.getElementById('loginUsername').value;
     const password = document.getElementById('loginPassword').value;
 
     try {
-        console.log('Attempting login to:', `${API_URL}/api/token/`);  // Add this for debugging
-        const response = await fetch(`${API_URL}/api/token/`, {  // Changed this line
+        console.log('Attempting login to:', `${API_URL}/api/token/`);
+        const response = await fetch(`${API_URL}/api/token/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
             },
             body: JSON.stringify({ username, password })
         });
 
-        console.log('Login response:', response);  // Add this for debugging
-                if (response.ok) {
-                    const data = await response.json();
-                    authToken = data.access;
-                    localStorage.setItem('token', authToken);
-                    
-                    // Get user info
-                    const userResponse = await fetch(`${API_URL}/users/me/`, {
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`
-                        }
-                    });
-                    const userData = await userResponse.json();
-                    isAdmin = userData.is_staff;
-                    localStorage.setItem('username', username);
-                    localStorage.setItem('isAdmin', isAdmin);
-                    
-                    showMainApp(username);
-                    showNotification('Welcome!', 'Login successful');
-                } else {
-                    showNotification('Error', 'Invalid credentials', 'error');
+        if (response.ok) {
+            const data = await response.json();
+            authToken = data.access;
+            localStorage.setItem('token', authToken);
+            
+            // Get user info - Fix this URL
+            const userResponse = await fetch(`${API_URL}/api/users/me/`, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Accept': 'application/json'
                 }
-            } catch (error) {
-                console.error('Login error:', error);
-                showNotification('Error', 'Login failed. Please try again.', 'error');
+            });
+            
+            if (userResponse.ok) {
+                const userData = await userResponse.json();
+                isAdmin = userData.is_staff;
+                localStorage.setItem('username', username);
+                localStorage.setItem('isAdmin', isAdmin);
+                
+                showMainApp(username);
+                showNotification('Welcome!', 'Login successful');
+            } else {
+                throw new Error('Failed to fetch user info');
             }
+        } else {
+            const errorData = await response.json();
+            showNotification('Error', errorData.detail || 'Invalid credentials', 'error');
         }
+    } catch (error) {
+        console.error('Login error:', error);
+        showNotification('Error', 'Login failed. Please try again.', 'error');
+    }
+}
 
         async function handleRegister(event) {
     event.preventDefault();
@@ -817,7 +823,7 @@ async function handleLogin(event) {
         // Load Books
         async function loadBooks(searchTerm = '') {
     try {
-        const response = await fetch(`${API_URL}/books/${searchTerm ? `search/?name=${searchTerm}` : ''}`, {
+        const response = await fetch(`${API_URL}/api/books/${searchTerm ? `search/?name=${searchTerm}` : ''}`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
@@ -916,7 +922,7 @@ async function handleLogin(event) {
         // Load Loans
         async function loadLoans() {
             try {
-                const response = await fetch(`${API_URL}/loans/`, {
+                const response = await fetch(`${API_URL}/api/loans/`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -974,7 +980,7 @@ async function handleLogin(event) {
         // Loan Book
         async function loanBook(bookId) {
             try {
-                const response = await fetch(`${API_URL}/loans/`, {
+                const response = await fetch(`${API_URL}/api/loans/`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
@@ -999,7 +1005,7 @@ async function handleLogin(event) {
         // Return Book
         async function returnBook(loanId) {
             try {
-                const response = await fetch(`${API_URL}/loans/${loanId}/return_book/`, {
+                const response = await fetch(`${API_URL}/api/loans/${loanId}/return_book/`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${authToken}`
