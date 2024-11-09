@@ -725,36 +725,38 @@ async function handleLogin(event) {
         }
 
         async function handleRegister(event) {
-            event.preventDefault();
-            const userData = {
-                username: document.getElementById('regUsername').value,
-                password: document.getElementById('regPassword').value,
-                name: document.getElementById('regName').value,
-                city: document.getElementById('regCity').value,
-                age: parseInt(document.getElementById('regAge').value)
-            };
+    event.preventDefault();
+    const userData = {
+        username: document.getElementById('regUsername').value,
+        password: document.getElementById('regPassword').value,
+        name: document.getElementById('regName').value,
+        city: document.getElementById('regCity').value,
+        age: parseInt(document.getElementById('regAge').value)
+    };
 
-            try {
-                const response = await fetch(`${API_URL}/register/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(userData)
-                });
+    try {
+        console.log('Sending registration request to:', `${API_URL}/api/register/`);
+        const response = await fetch(`${API_URL}/api/register/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
 
-                if (response.ok) {
-                    showNotification('Success', 'Registration successful! Please login.', 'success');
-                    showLoginForm();
-                } else {
-                    const errorData = await response.json();
-                    showNotification('Error', errorData.error || 'Registration failed', 'error');
-                }
-            } catch (error) {
-                console.error('Registration error:', error);
-                showNotification('Error', 'Registration failed', 'error');
-            }
+        if (response.ok) {
+            showNotification('Success', 'Registration successful! Please login.', 'success');
+            showLoginForm();
+        } else {
+            const errorData = await response.json();
+            showNotification('Error', errorData.error || 'Registration failed', 'error');
         }
+    } catch (error) {
+        console.error('Registration error:', error);
+        showNotification('Error', 'Registration failed. Please try again.', 'error');
+    }
+}
 
         function showLoginForm() {
             document.getElementById('registerForm').style.display = 'none';
