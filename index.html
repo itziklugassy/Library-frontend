@@ -833,90 +833,88 @@
         if (!response.ok) throw new Error('Failed to fetch books');
         
         const books = await response.json();
-        console.log('Books data:', books); // Add this for debugging
+        console.log('Books data:', books);
+        console.log('API_URL:', API_URL);
         
         const booksList = document.getElementById('booksList');
-if (!books || books.length === 0) {
-    booksList.innerHTML = `
-        <div class="col-12">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                No books available${searchTerm ? ' matching your search' : ''}.
-            </div>
-        </div>`;
-    return;
-}
-
-console.log('API_URL:', API_URL); // Debug logging
-booksList.innerHTML = books.map(book => {
-    const imageUrl = book.image ? `${API_URL}/media/books/${book.image.split('/').pop()}` : null;
-    console.log('Book:', book.name, 'Image URL:', imageUrl); // Debug logging
-
-    return `
-        <div class="col-md-4 mb-4">
-            <div class="card book-card ${book.is_loaned ? 'loaned' : ''}">
-                <div class="position-relative">
-                    <div class="book-image-container">
-                        ${book.image ? 
-                            `<img src="${imageUrl}" 
-                                  class="book-image" 
-                                  alt="${book.name}" 
-                                  onerror="console.log('Image failed to load for ${book.name}:', this.src); this.onerror=null; this.src='https://via.placeholder.com/300x450?text=No+Image';">` : 
-                            `<div class="d-flex align-items-center justify-content-center h-100 bg-light">
-                                <i class="fas fa-book fa-3x text-muted"></i>
-                             </div>`
-                        }
+        if (!books || books.length === 0) {
+            booksList.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No books available${searchTerm ? ' matching your search' : ''}.
                     </div>
-                    
-                    ${book.is_loaned ? `
-                        <div class="book-overlay">
-                            <div class="book-status-badge loaned">
-                                <i class="fas fa-lock me-2"></i>On Loan
-                                <div class="book-loan-info mt-2">
-                                    Available in ${book.days_until_available} days
-                                </div>
+                </div>`;
+            return;
+        }
+
+        booksList.innerHTML = books.map(book => {
+            console.log('Processing book:', book);
+            return `
+                <div class="col-md-4 mb-4">
+                    <div class="card book-card ${book.is_loaned ? 'loaned' : ''}">
+                        <div class="position-relative">
+                            <div class="book-image-container">
+                                ${book.image_url ? 
+                                    `<img src="${book.image_url}" 
+                                          class="book-image" 
+                                          alt="${book.name}" 
+                                          onerror="console.log('Image failed to load:', this.src); this.onerror=null; this.src='https://via.placeholder.com/300x450?text=No+Image';">` : 
+                                    `<div class="d-flex align-items-center justify-content-center h-100 bg-light">
+                                        <i class="fas fa-book fa-3x text-muted"></i>
+                                     </div>`
+                                }
                             </div>
+                            
+                            ${book.is_loaned ? `
+                                <div class="book-overlay">
+                                    <div class="book-status-badge loaned">
+                                        <i class="fas fa-lock me-2"></i>On Loan
+                                        <div class="book-loan-info mt-2">
+                                            Available in ${book.days_until_available} days
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div class="book-status-badge available">
+                                    <i class="fas fa-check-circle me-1"></i>Available
+                                </div>
+                            `}
+                            
+                            <span class="position-absolute top-0 end-0 m-2 badge bg-primary">
+                                <i class="fas fa-clock me-1"></i>${getLoanPeriod(book.book_type)}
+                            </span>
                         </div>
-                    ` : `
-                        <div class="book-status-badge available">
-                            <i class="fas fa-check-circle me-1"></i>Available
+                        
+                        <div class="card-body">
+                            <h5 class="book-title">${book.name}</h5>
+                            <p class="book-author">
+                                <i class="fas fa-user-edit me-2"></i>${book.author}
+                            </p>
+                            <div class="book-meta">
+                                <span>
+                                    <i class="fas fa-calendar me-2"></i>${book.year_published}
+                                </span>
+                                <span>
+                                    <i class="fas fa-hourglass-half me-2"></i>
+                                    ${getLoanPeriod(book.book_type)}
+                                </span>
+                            </div>
+                            
+                            ${book.is_loaned ? `
+                                <button class="btn btn-secondary w-100" disabled>
+                                    <i class="fas fa-clock me-2"></i>Currently On Loan
+                                </button>
+                            ` : `
+                                <button class="btn btn-primary w-100" onclick="loanBook(${book.id})">
+                                    <i class="fas fa-hand-holding me-2"></i>Loan Book
+                                </button>
+                            `}
                         </div>
-                    `}
-                    
-                    <span class="position-absolute top-0 end-0 m-2 badge bg-primary">
-                        <i class="fas fa-clock me-1"></i>${getLoanPeriod(book.book_type)}
-                    </span>
-                </div>
-                
-                <div class="card-body">
-                    <h5 class="book-title">${book.name}</h5>
-                    <p class="book-author">
-                        <i class="fas fa-user-edit me-2"></i>${book.author}
-                    </p>
-                    <div class="book-meta">
-                        <span>
-                            <i class="fas fa-calendar me-2"></i>${book.year_published}
-                        </span>
-                        <span>
-                            <i class="fas fa-hourglass-half me-2"></i>
-                            ${getLoanPeriod(book.book_type)}
-                        </span>
                     </div>
-                    
-                    ${book.is_loaned ? `
-                        <button class="btn btn-secondary w-100" disabled>
-                            <i class="fas fa-clock me-2"></i>Currently On Loan
-                        </button>
-                    ` : `
-                        <button class="btn btn-primary w-100" onclick="loanBook(${book.id})">
-                            <i class="fas fa-hand-holding me-2"></i>Loan Book
-                        </button>
-                    `}
                 </div>
-            </div>
-        </div>
-    `;
-}).join('');
+            `;
+        }).join('');
     } catch (error) {
         console.error('Error loading books:', error);
         showNotification('Error', 'Failed to load books', 'error');
