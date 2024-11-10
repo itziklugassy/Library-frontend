@@ -856,7 +856,7 @@
                         <div class="position-relative">
                             <div class="book-image-container">
                                 ${book.image_url ? 
-                                    `<img src="${book.image_url}" 
+                                    `<img src="${encodeURI(book.image_url)}" 
                                           class="book-image" 
                                           alt="${book.name}" 
                                           onerror="console.log('Image failed to load:', this.src); this.onerror=null; this.src='https://via.placeholder.com/300x450?text=No+Image';">` : 
